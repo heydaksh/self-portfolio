@@ -613,7 +613,7 @@ class _ContactSectionState extends State<ContactSection>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            '© 2026 $name. Made with ',
+            '© 2025 $name. Made with ',
             style: TextStyle(
               color: Colors.white.withOpacity(0.7),
               fontSize: 14,
