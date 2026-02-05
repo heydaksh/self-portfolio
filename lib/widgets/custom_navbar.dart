@@ -31,6 +31,10 @@ class CustomNavbar extends StatefulWidget {
 }
 
 class _CustomNavbarState extends State<CustomNavbar> {
+  // ---------------------------------------------------------------------------
+  // Data
+  // ---------------------------------------------------------------------------
+
   final List<String> _sections = [
     'Home',
     'About',
@@ -38,11 +42,17 @@ class _CustomNavbarState extends State<CustomNavbar> {
     'Experience',
     'Contact'
   ];
+
   late final List<GlobalKey> _keys;
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
 
   @override
   void initState() {
     super.initState();
+
     _keys = [
       widget.homeKey,
       widget.aboutKey,
@@ -51,6 +61,10 @@ class _CustomNavbarState extends State<CustomNavbar> {
       widget.contactKey,
     ];
   }
+
+  // ---------------------------------------------------------------------------
+  // UI
+  // ---------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -97,6 +111,10 @@ class _CustomNavbarState extends State<CustomNavbar> {
       ),
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Widgets
+  // ---------------------------------------------------------------------------
 
   Widget _buildLogo() {
     return GestureDetector(
@@ -195,6 +213,10 @@ class _CustomNavbarState extends State<CustomNavbar> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Mobile menu
+  // ---------------------------------------------------------------------------
+
   void _showMobileMenu() {
     showModalBottomSheet(
       context: context,
@@ -260,6 +282,10 @@ class _CustomNavbarState extends State<CustomNavbar> {
       ),
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
 
   IconData _getIconForSection(int index) {
     switch (index) {

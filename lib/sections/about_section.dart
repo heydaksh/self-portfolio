@@ -4,6 +4,10 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../utils/responsive_utils.dart';
 
+// --------------------------------------------------------------------------
+// Model
+// --------------------------------------------------------------------------
+
 class Skill {
   final String name;
   final double level;
@@ -34,8 +38,13 @@ class Skill {
   }
 }
 
+// --------------------------------------------------------------------------
+// About Section
+// --------------------------------------------------------------------------
+
 class AboutSection extends StatefulWidget {
   final bool isVisible;
+
   const AboutSection({super.key, this.isVisible = false});
 
   @override
@@ -44,11 +53,24 @@ class AboutSection extends StatefulWidget {
 
 class _AboutSectionState extends State<AboutSection>
     with SingleTickerProviderStateMixin {
+  // ------------------------------------------------------------------------
+  // Streams
+  // ------------------------------------------------------------------------
+
   late Stream<DocumentSnapshot> _bioStream;
   late Stream<QuerySnapshot> _projectCountStream;
   late Stream<QuerySnapshot> _skillStream;
+
+  // ------------------------------------------------------------------------
+  // Animations
+  // ------------------------------------------------------------------------
+
   late AnimationController _animationController;
   late Animation<double> _skillsAnimation;
+
+  // ------------------------------------------------------------------------
+  // Lifecycle
+  // ------------------------------------------------------------------------
 
   @override
   void initState() {
@@ -58,8 +80,10 @@ class _AboutSectionState extends State<AboutSection>
         .collection('profile')
         .doc('main_info')
         .snapshots();
+
     _projectCountStream =
         FirebaseFirestore.instance.collection('projects').snapshots();
+
     _skillStream = FirebaseFirestore.instance.collection('skills').snapshots();
 
     _animationController = AnimationController(
@@ -80,6 +104,7 @@ class _AboutSectionState extends State<AboutSection>
   @override
   void didUpdateWidget(AboutSection oldWidget) {
     super.didUpdateWidget(oldWidget);
+
     if (widget.isVisible && !oldWidget.isVisible) {
       _animationController.reset();
       _animationController.forward();
@@ -94,6 +119,10 @@ class _AboutSectionState extends State<AboutSection>
     super.dispose();
   }
 
+  // ------------------------------------------------------------------------
+  // UI
+  // ------------------------------------------------------------------------
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -105,7 +134,9 @@ class _AboutSectionState extends State<AboutSection>
           children: [
             _buildSectionHeader(context),
             ResponsiveUtils.verticalSpace(
-                context, ResponsiveUtils.isDesktop(context) ? 80 : 50),
+              context,
+              ResponsiveUtils.isDesktop(context) ? 80 : 50,
+            ),
             ResponsiveUtils.isDesktop(context)
                 ? _buildDesktopLayout(context)
                 : _buildMobileLayout(context),
@@ -115,12 +146,50 @@ class _AboutSectionState extends State<AboutSection>
     );
   }
 
+  // ------------------------------------------------------------------------
+  // Layouts
+  // ------------------------------------------------------------------------
+
+  Widget _buildDesktopLayout(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 2,
+          child: _buildAboutContent(context),
+        ),
+        ResponsiveUtils.horizontalSpace(context, 80),
+        Expanded(
+          flex: 1,
+          child: _buildSkillsSection(context),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
+    return Column(
+      children: [
+        _buildAboutContent(context),
+        ResponsiveUtils.verticalSpace(context, 50),
+        _buildSkillsSection(context),
+      ],
+    );
+  }
+
+  // ------------------------------------------------------------------------
+  // Section parts
+  // ------------------------------------------------------------------------
+
   Widget _buildSectionHeader(BuildContext context) {
     return Column(
       children: [
         Container(
-          padding: ResponsiveUtils.paddingSymmetric(context,
-              horizontal: 20, vertical: 8),
+          padding: ResponsiveUtils.paddingSymmetric(
+            context,
+            horizontal: 20,
+            vertical: 8,
+          ),
           decoration: BoxDecoration(
             color: const Color(0xFF6366F1).withOpacity(0.1),
             borderRadius:
@@ -151,33 +220,6 @@ class _AboutSectionState extends State<AboutSection>
         .slideY(begin: 0.2, end: 0, curve: Curves.easeOutQuad);
   }
 
-  Widget _buildDesktopLayout(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 2,
-          child: _buildAboutContent(context),
-        ),
-        ResponsiveUtils.horizontalSpace(context, 80),
-        Expanded(
-          flex: 1,
-          child: _buildSkillsSection(context),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMobileLayout(BuildContext context) {
-    return Column(
-      children: [
-        _buildAboutContent(context),
-        ResponsiveUtils.verticalSpace(context, 50),
-        _buildSkillsSection(context),
-      ],
-    );
-  }
-
   Widget _buildAboutContent(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,29 +227,30 @@ class _AboutSectionState extends State<AboutSection>
         _buildStatsRow(context),
         ResponsiveUtils.verticalSpace(context, 40),
 
-        //  DYNAMIC BIO STREAM
+        // DYNAMIC BIO STREAM
         StreamBuilder<DocumentSnapshot>(
-            stream: _bioStream,
-            builder: (context, snapshot) {
-              String bioText =
-                  'Hello! I\'m a passionate Flutter developer with a love for creating beautiful, functional, and user-friendly mobile applications.';
+          stream: _bioStream,
+          builder: (context, snapshot) {
+            String bioText =
+                'Hello! I\'m a passionate Flutter developer with a love for creating beautiful, functional, and user-friendly mobile applications.';
 
-              if (snapshot.hasData && snapshot.data!.exists) {
-                final data = snapshot.data!.data() as Map<String, dynamic>;
-                if (data['bio'] != null && data['bio'].toString().isNotEmpty) {
-                  bioText = data['bio'];
-                }
+            if (snapshot.hasData && snapshot.data!.exists) {
+              final data = snapshot.data!.data() as Map<String, dynamic>;
+              if (data['bio'] != null && data['bio'].toString().isNotEmpty) {
+                bioText = data['bio'];
               }
+            }
 
-              return Text(
-                bioText,
-                style: ResponsiveUtils.bodyLarge(context).copyWith(
-                  color: Colors.grey[700],
-                  height: 1.8,
-                ),
-              );
-            }),
-        // 🔴 END STREAM
+            return Text(
+              bioText,
+              style: ResponsiveUtils.bodyLarge(context).copyWith(
+                color: Colors.grey[700],
+                height: 1.8,
+              ),
+            );
+          },
+        ),
+        // END STREAM
 
         ResponsiveUtils.verticalSpace(context, 30),
         _buildFeatures(context),
@@ -226,6 +269,7 @@ class _AboutSectionState extends State<AboutSection>
             stream: _bioStream,
             builder: (context, snapshot) {
               String experience = '5+';
+
               if (snapshot.hasData && snapshot.data!.exists) {
                 final data = snapshot.data!.data() as Map<String, dynamic>;
                 if (data['experience'] != null &&
@@ -233,7 +277,11 @@ class _AboutSectionState extends State<AboutSection>
                   experience = data['experience'];
                 }
               }
-              return _StatCard(number: experience, label: 'Months\nExperience');
+
+              return _StatCard(
+                number: experience,
+                label: 'Months\nExperience',
+              );
             },
           ),
         ),
@@ -243,9 +291,11 @@ class _AboutSectionState extends State<AboutSection>
             stream: _projectCountStream,
             builder: (context, snapshot) {
               int projectCount = 0;
+
               if (snapshot.hasData) {
                 projectCount = snapshot.data!.docs.length;
               }
+
               return _StatCard(
                 number: projectCount > 0 ? '${projectCount - 1}+' : '0+',
                 label: 'Projects\nCompleted',
@@ -278,11 +328,13 @@ class _AboutSectionState extends State<AboutSection>
 
     return Column(
       children: features
-          .map((feature) => _FeatureItem(
-                icon: feature['icon'] as IconData,
-                title: feature['title'] as String,
-                desc: feature['desc'] as String,
-              ))
+          .map(
+            (feature) => _FeatureItem(
+              icon: feature['icon'] as IconData,
+              title: feature['title'] as String,
+              desc: feature['desc'] as String,
+            ),
+          )
           .toList(),
     );
   }
@@ -317,8 +369,12 @@ class _AboutSectionState extends State<AboutSection>
 
             return Column(
               children: skills
-                  .map((skill) =>
-                      _SkillItem(skill: skill, animation: _skillsAnimation))
+                  .map(
+                    (skill) => _SkillItem(
+                      skill: skill,
+                      animation: _skillsAnimation,
+                    ),
+                  )
                   .toList(),
             );
           },
@@ -387,7 +443,8 @@ class _SkillItemState extends State<_SkillItem> {
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
                     borderRadius: BorderRadius.circular(
-                        ResponsiveUtils.radius(context, 4)),
+                      ResponsiveUtils.radius(context, 4),
+                    ),
                     boxShadow: _isHovered
                         ? [
                             BoxShadow(
@@ -406,7 +463,8 @@ class _SkillItemState extends State<_SkillItem> {
                       decoration: BoxDecoration(
                         color: widget.skill.color,
                         borderRadius: BorderRadius.circular(
-                            ResponsiveUtils.radius(context, 4)),
+                          ResponsiveUtils.radius(context, 4),
+                        ),
                         gradient: _isHovered
                             ? LinearGradient(
                                 colors: [
@@ -477,7 +535,9 @@ class _StatCardState extends State<_StatCard> {
               widget.number,
               style: TextStyle(
                 fontSize: ResponsiveUtils.fontSize(
-                    context, ResponsiveUtils.isMobile(context) ? 24 : 32),
+                  context,
+                  ResponsiveUtils.isMobile(context) ? 24 : 32,
+                ),
                 fontWeight: FontWeight.bold,
                 color: const Color(0xFF6366F1),
               ),
@@ -550,7 +610,8 @@ class _FeatureItemState extends State<_FeatureItem> {
                   color: const Color(0xFF6366F1)
                       .withOpacity(_isHovered ? 0.2 : 0.1),
                   borderRadius: BorderRadius.circular(
-                      ResponsiveUtils.radius(context, 12)),
+                    ResponsiveUtils.radius(context, 12),
+                  ),
                 ),
                 child: Icon(
                   widget.icon,

@@ -12,21 +12,34 @@ class ProjectsSection extends StatefulWidget {
 }
 
 class _ProjectsSectionState extends State<ProjectsSection> {
+  // ---------------------------------------------------------------------------
+  // State
+  // ---------------------------------------------------------------------------
+
   int selectedCategory = 0;
   final List<String> categories = ['All', 'Mobile', 'Web'];
 
   // [FIX] Declare stream variable
   late Stream<QuerySnapshot> _projectsStream;
 
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
+
   @override
   void initState() {
     super.initState();
+
     // [FIX] Initialize stream once
     _projectsStream = FirebaseFirestore.instance
         .collection('projects')
         .orderBy('timestamp', descending: true)
         .snapshots();
   }
+
+  // ---------------------------------------------------------------------------
+  // UI
+  // ---------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -39,10 +52,14 @@ class _ProjectsSectionState extends State<ProjectsSection> {
           children: [
             _buildSectionHeader(context),
             ResponsiveUtils.verticalSpace(
-                context, ResponsiveUtils.isDesktop(context) ? 50 : 40),
+              context,
+              ResponsiveUtils.isDesktop(context) ? 50 : 40,
+            ),
             _buildCategoryFilter(context),
             ResponsiveUtils.verticalSpace(
-                context, ResponsiveUtils.isDesktop(context) ? 50 : 40),
+              context,
+              ResponsiveUtils.isDesktop(context) ? 50 : 40,
+            ),
             _buildProjectsGrid(context),
           ],
         ),
@@ -50,9 +67,11 @@ class _ProjectsSectionState extends State<ProjectsSection> {
     );
   }
 
-  // ... (keep _buildSectionHeader and _buildCategoryFilter exactly as they were) ...
+  // ---------------------------------------------------------------------------
+  // Header & Filters
+  // ---------------------------------------------------------------------------
+
   Widget _buildSectionHeader(BuildContext context) {
-    // ... Copy your existing code here ...
     final size = MediaQuery.of(context).size;
     final isDesktop = size.width > 1024;
     final isTablet = size.width > 768 && size.width <= 1024;
@@ -106,7 +125,6 @@ class _ProjectsSectionState extends State<ProjectsSection> {
   }
 
   Widget _buildCategoryFilter(BuildContext context) {
-    // ... Copy your existing code here ...
     final size = MediaQuery.of(context).size;
     final isMobile = size.width <= 768;
 
@@ -117,6 +135,7 @@ class _ProjectsSectionState extends State<ProjectsSection> {
           mainAxisSize: MainAxisSize.min,
           children: List.generate(categories.length, (index) {
             final isSelected = selectedCategory == index;
+
             return GestureDetector(
               onTap: () => setState(() => selectedCategory = index),
               child: AnimatedContainer(
@@ -155,8 +174,11 @@ class _ProjectsSectionState extends State<ProjectsSection> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Grid
+  // ---------------------------------------------------------------------------
+
   Widget _buildProjectsGrid(BuildContext context) {
-    // [FIX] Use the initialized stream variable
     return StreamBuilder<QuerySnapshot>(
       stream: _projectsStream,
       builder: (context, snapshot) {
@@ -171,7 +193,8 @@ class _ProjectsSectionState extends State<ProjectsSection> {
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return const Center(
             child: Text(
-                "No projects added yet. Go to Admin Dashboard to add one!"),
+              "No projects added yet. Go to Admin Dashboard to add one!",
+            ),
           );
         }
 
@@ -191,6 +214,7 @@ class _ProjectsSectionState extends State<ProjectsSection> {
         }
 
         final width = MediaQuery.of(context).size.width;
+
         int crossAxisCount;
         double crossAxisSpacing;
         double mainAxisSpacing;
@@ -237,7 +261,10 @@ class _ProjectsSectionState extends State<ProjectsSection> {
   }
 }
 
-// ... (Rest of the file: Project class and ProjectCard class remain exactly the same) ...
+// -----------------------------------------------------------------------------
+// Models
+// -----------------------------------------------------------------------------
+
 class Project {
   final String title;
   final String description;
@@ -259,10 +286,7 @@ class Project {
     required this.color,
   });
 
-  // Factory constructor to create a Project from Firestore data
   factory Project.fromMap(Map<String, dynamic> data) {
-    // Parse the color string (e.g., "#6366F1") to a Color object
-    // Default to Indigo if parsing fails
     Color parseColor(String? hexString) {
       if (hexString == null || hexString.isEmpty) {
         return const Color(0xFF6366F1);
@@ -290,6 +314,10 @@ class Project {
   }
 }
 
+// -----------------------------------------------------------------------------
+// Card
+// -----------------------------------------------------------------------------
+
 class ProjectCard extends StatefulWidget {
   final Project project;
 
@@ -300,8 +328,16 @@ class ProjectCard extends StatefulWidget {
 }
 
 class _ProjectCardState extends State<ProjectCard> {
+  // ---------------------------------------------------------------------------
+  // State
+  // ---------------------------------------------------------------------------
+
   bool _isHovered = false;
   late ScrollController _scrollController;
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
 
   @override
   void initState() {
@@ -314,6 +350,10 @@ class _ProjectCardState extends State<ProjectCard> {
     _scrollController.dispose();
     super.dispose();
   }
+
+  // ---------------------------------------------------------------------------
+  // UI
+  // ---------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -372,7 +412,9 @@ class _ProjectCardState extends State<ProjectCard> {
                             duration: const Duration(milliseconds: 400),
                             curve: Curves.easeOut,
                             child: _buildProjectImage(
-                                widget.project.imageUrl, isMobile),
+                              widget.project.imageUrl,
+                              isMobile,
+                            ),
                           ),
                         ),
                       ),
@@ -426,7 +468,8 @@ class _ProjectCardState extends State<ProjectCard> {
                             data: Theme.of(context).copyWith(
                               scrollbarTheme: ScrollbarThemeData(
                                 thumbColor: MaterialStateProperty.all(
-                                    widget.project.color.withOpacity(0.3)),
+                                  widget.project.color.withOpacity(0.3),
+                                ),
                                 thickness: MaterialStateProperty.all(4),
                                 radius: const Radius.circular(10),
                               ),
@@ -455,31 +498,30 @@ class _ProjectCardState extends State<ProjectCard> {
                         SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: Row(
-                            children: widget.project.technologies.take(5).map(
-                              (tech) {
-                                return Container(
-                                  margin:
-                                      EdgeInsets.only(right: size.width / 90),
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: isMobile ? 6 : 8,
-                                    vertical: 4,
+                            children:
+                                widget.project.technologies.take(5).map((tech) {
+                              return Container(
+                                margin: EdgeInsets.only(
+                                  right: size.width / 90,
+                                ),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: isMobile ? 6 : 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: widget.project.color.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  tech,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: widget.project.color,
+                                    fontWeight: FontWeight.w600,
                                   ),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        widget.project.color.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    tech,
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: widget.project.color,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ).toList(),
+                                ),
+                              );
+                            }).toList(),
                           ),
                         ),
                         SizedBox(height: verticalGap),
@@ -491,9 +533,12 @@ class _ProjectCardState extends State<ProjectCard> {
                             Icons.launch,
                             widget.project.color,
                             () async {
-                              // If URL is empty, show snackbar or do nothing
-                              if (widget.project.liveUrl.isEmpty) return;
+                              if (widget.project.liveUrl.isEmpty) {
+                                return;
+                              }
+
                               final Uri url = Uri.parse(widget.project.liveUrl);
+
                               if (!await launchUrl(
                                 url,
                                 mode: LaunchMode.externalApplication,
@@ -516,7 +561,10 @@ class _ProjectCardState extends State<ProjectCard> {
     );
   }
 
-  // 🖼️ Smart Image Builder: Handles Network (Cloudinary) & Asset Images
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
+
   Widget _buildProjectImage(String imageUrl, bool isMobile) {
     if (imageUrl.startsWith('http')) {
       return Image.network(
@@ -526,6 +574,7 @@ class _ProjectCardState extends State<ProjectCard> {
             _errorPlaceholder(isMobile),
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
+
           return Center(
             child: CircularProgressIndicator(
               value: loadingProgress.expectedTotalBytes != null
@@ -537,7 +586,6 @@ class _ProjectCardState extends State<ProjectCard> {
         },
       );
     } else {
-      // Fallback for old local assets if you manually add them to Firestore with paths
       return Image.asset(
         imageUrl,
         fit: BoxFit.cover,

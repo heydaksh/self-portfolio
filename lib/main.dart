@@ -1,5 +1,4 @@
 // ignore_for_file: curly_braces_in_flow_control_structures
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -14,17 +13,21 @@ import 'utils/responsive_utils.dart';
 import 'widgets/custom_navbar.dart';
 import 'widgets/floatingactionbutton.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   if (kIsWeb) {
     await Firebase.initializeApp(
-        options: const FirebaseOptions(
-            apiKey: "AIzaSyBwPClgdsJuW9tR3mqtFvWzeigiT_aznwU",
-            authDomain: "daksh-portfolio-2025.firebaseapp.com",
-            projectId: "daksh-portfolio-2025",
-            storageBucket: "daksh-portfolio-2025.firebasestorage.app",
-            messagingSenderId: "679850385630",
-            appId: "1:679850385630:web:60e07a179cdaff1adc224f"));
+      options: const FirebaseOptions(
+        // use your own api and other details here
+        apiKey: "AIzaSyBwPClgdsJuW9tR3mqtFvWzeigiT_aznwU",
+        authDomain: "daksh-portfolio-2025.firebaseapp.com",
+        projectId: "daksh-portfolio-2025",
+        storageBucket: "daksh-portfolio-2025.firebasestorage.app",
+        messagingSenderId: "679850385630",
+        appId: "1:679850385630:web:60e07a179cdaff1adc224f",
+      ),
+    );
   }
 
   runApp(const MyApp());
@@ -62,27 +65,48 @@ class PortfolioPage extends StatefulWidget {
 
 class _PortfolioPageState extends State<PortfolioPage>
     with TickerProviderStateMixin {
+  // ---------------------------------------------------------------------------
+  // Keys
+  // ---------------------------------------------------------------------------
+
   final GlobalKey homeKey = GlobalKey();
   final GlobalKey aboutKey = GlobalKey();
   final GlobalKey projectsKey = GlobalKey();
   final GlobalKey experienceKey = GlobalKey();
   final GlobalKey contactKey = GlobalKey();
 
-  late ScrollController _scrollController;
-  late AnimationController _navbarController;
+  // ---------------------------------------------------------------------------
+  // Controllers
+  // ---------------------------------------------------------------------------
+
+  late final ScrollController _scrollController;
+  late final AnimationController _navbarController;
+
+  // ---------------------------------------------------------------------------
+  // State
+  // ---------------------------------------------------------------------------
+
   bool _isScrolled = false;
   bool _isScrolling = false;
+
   int _currentSection = 0;
+
   final Map<int, double> _visibleSections = {};
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
 
   @override
   void initState() {
     super.initState();
+
     _scrollController = ScrollController();
     _navbarController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
+
     _scrollController.addListener(_onScroll);
   }
 
@@ -92,6 +116,10 @@ class _PortfolioPageState extends State<PortfolioPage>
     _navbarController.dispose();
     super.dispose();
   }
+
+  // ---------------------------------------------------------------------------
+  // Scroll & section handling
+  // ---------------------------------------------------------------------------
 
   void _onScroll() {
     if (_scrollController.hasClients) {
@@ -106,26 +134,22 @@ class _PortfolioPageState extends State<PortfolioPage>
   }
 
   void _updateSectionIndex(int index, VisibilityInfo info) {
-    // Calculate visible pixels
     final visiblePixels = info.visibleFraction * info.size.height;
     _visibleSections[index] = visiblePixels;
 
-    // 1. Don't update during programmatic scrolling to prevent "jumping"
     if (_isScrolling) return;
 
-    // 2. [FIX] Check if we are at the bottom of the page
-    // If we are near the bottom (within 50px), force the last section (Contact/Index 4)
     if (_scrollController.hasClients) {
       final pos = _scrollController.position;
+
       if (pos.pixels >= pos.maxScrollExtent - 50) {
         if (_currentSection != 4) {
           setState(() => _currentSection = 4);
         }
-        return; // Stop here, do not run the logic below
+        return;
       }
     }
 
-    // 3. Normal Logic: Find the section that covers the most screen area
     int bestSection = _currentSection;
     double maxPixels = 0.0;
 
@@ -143,12 +167,14 @@ class _PortfolioPageState extends State<PortfolioPage>
 
   void scrollToSection(GlobalKey key) {
     final context = key.currentContext;
+
     if (context != null) {
       setState(() {
         _isScrolling = true;
-        if (key == homeKey) {
+
+        if (key == homeKey)
           _currentSection = 0;
-        } else if (key == aboutKey)
+        else if (key == aboutKey)
           _currentSection = 1;
         else if (key == projectsKey)
           _currentSection = 2;
@@ -165,7 +191,6 @@ class _PortfolioPageState extends State<PortfolioPage>
         duration: const Duration(milliseconds: 1000),
         curve: Curves.easeInOutCubic,
       ).then((_) {
-        // Wait longer after animation finishes to let detectors settle
         Future.delayed(const Duration(milliseconds: 300), () {
           if (mounted) {
             setState(() => _isScrolling = false);
@@ -174,6 +199,10 @@ class _PortfolioPageState extends State<PortfolioPage>
       });
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // UI
+  // ---------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {

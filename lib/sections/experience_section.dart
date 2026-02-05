@@ -11,17 +11,28 @@ class ExperienceSection extends StatefulWidget {
 
 class _ExperienceSectionState extends State<ExperienceSection>
     with SingleTickerProviderStateMixin {
+  // ---------------------------------------------------------------------------
+  // Controllers & Streams
+  // ---------------------------------------------------------------------------
+
   late AnimationController _animationController;
+
   // 🟢 FIX 1: Stream ko init mein load karo
   late Stream<QuerySnapshot> _experienceStream;
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
 
   @override
   void initState() {
     super.initState();
+
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     );
+
     // 🟢 Fix: Load stream once
     _experienceStream = FirebaseFirestore.instance
         .collection('experience')
@@ -37,6 +48,10 @@ class _ExperienceSectionState extends State<ExperienceSection>
     _animationController.dispose();
     super.dispose();
   }
+
+  // ---------------------------------------------------------------------------
+  // UI
+  // ---------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +85,10 @@ class _ExperienceSectionState extends State<ExperienceSection>
             StreamBuilder<QuerySnapshot>(
               stream: _experienceStream,
               builder: (context, snapshot) {
-                if (snapshot.hasError) return Text('Error: ${snapshot.error}');
+                if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                }
+
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const CircularProgressIndicator();
                 }
@@ -80,7 +98,9 @@ class _ExperienceSectionState extends State<ExperienceSection>
                 }
 
                 final experiences = snapshot.data!.docs.map((doc) {
-                  return Experience.fromMap(doc.data() as Map<String, dynamic>);
+                  return Experience.fromMap(
+                    doc.data() as Map<String, dynamic>,
+                  );
                 }).toList();
 
                 return _buildTimeline(isDesktop, experiences);
@@ -92,8 +112,9 @@ class _ExperienceSectionState extends State<ExperienceSection>
     );
   }
 
-  // ... (Baaki saare helper methods aur Experience class same rahenge, bas copy paste karo neeche)
-  // ... Paste _buildSectionHeader, _buildTimeline, _ExperienceItem, Experience class here ...
+  // ---------------------------------------------------------------------------
+  // Header & Timeline
+  // ---------------------------------------------------------------------------
 
   Widget _buildSectionHeader() {
     return Column(
@@ -176,6 +197,10 @@ class _ExperienceSectionState extends State<ExperienceSection>
   }
 }
 
+// -----------------------------------------------------------------------------
+// Experience Item
+// -----------------------------------------------------------------------------
+
 class _ExperienceItem extends StatefulWidget {
   final Experience experience;
   final bool isLast;
@@ -195,6 +220,10 @@ class _ExperienceItem extends StatefulWidget {
 
 class _ExperienceItemState extends State<_ExperienceItem> {
   bool _isHovered = false;
+
+  // ---------------------------------------------------------------------------
+  // UI
+  // ---------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -295,6 +324,10 @@ class _ExperienceItemState extends State<_ExperienceItem> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Sub widgets
+  // ---------------------------------------------------------------------------
+
   Widget _buildExperienceHeader(Experience experience, bool isDesktop) {
     return isDesktop
         ? Row(
@@ -366,7 +399,10 @@ class _ExperienceItemState extends State<_ExperienceItem> {
                 ),
               ),
               const SizedBox(height: 12),
-              _buildPeriodAndLocation(experience, isMobile: true),
+              _buildPeriodAndLocation(
+                experience,
+                isMobile: true,
+              ),
             ],
           );
   }
@@ -398,8 +434,10 @@ class _ExperienceItemState extends State<_ExperienceItem> {
     );
   }
 
-  Widget _buildPeriodAndLocation(Experience experience,
-      {bool isMobile = false}) {
+  Widget _buildPeriodAndLocation(
+    Experience experience, {
+    bool isMobile = false,
+  }) {
     return Column(
       crossAxisAlignment:
           isMobile ? CrossAxisAlignment.start : CrossAxisAlignment.end,
@@ -423,11 +461,18 @@ class _ExperienceItemState extends State<_ExperienceItem> {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.location_on_outlined, size: 14, color: Colors.grey[500]),
+            Icon(
+              Icons.location_on_outlined,
+              size: 14,
+              color: Colors.grey[500],
+            ),
             const SizedBox(width: 4),
             Text(
               experience.location,
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
             ),
           ],
         ),
@@ -465,34 +510,36 @@ class _ExperienceItemState extends State<_ExperienceItem> {
           ],
         ),
         const SizedBox(height: 16),
-        ...experience.achievements.map((achievement) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(top: 6),
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: experience.color.withOpacity(0.5),
-                      shape: BoxShape.circle,
+        ...experience.achievements.map(
+          (achievement) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(top: 6),
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: experience.color.withOpacity(0.5),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    achievement,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                      height: 1.5,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      achievement,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                        height: 1.5,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -502,27 +549,32 @@ class _ExperienceItemState extends State<_ExperienceItem> {
       spacing: 8,
       runSpacing: 8,
       children: experience.technologies
-          .map((tech) => Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.grey[200]!),
+          .map(
+            (tech) => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              child: Text(
+                tech,
+                style: TextStyle(
+                  color: Colors.grey[700],
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
                 ),
-                child: Text(
-                  tech,
-                  style: TextStyle(
-                    color: Colors.grey[700],
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ))
+              ),
+            ),
+          )
           .toList(),
     );
   }
 }
+
+// -----------------------------------------------------------------------------
+// Model
+// -----------------------------------------------------------------------------
 
 class Experience {
   final String company;

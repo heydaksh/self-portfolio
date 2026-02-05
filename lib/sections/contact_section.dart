@@ -15,34 +15,58 @@ class ContactSection extends StatefulWidget {
 
 class _ContactSectionState extends State<ContactSection>
     with TickerProviderStateMixin {
+  // ---------------------------------------------------------------------------
+  // Form & Controllers
+  // ---------------------------------------------------------------------------
+
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _messageController = TextEditingController();
 
+  // ---------------------------------------------------------------------------
+  // State & Animations
+  // ---------------------------------------------------------------------------
+
   bool _isLoading = false;
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+
+  // ---------------------------------------------------------------------------
+  // Streams
+  // ---------------------------------------------------------------------------
+
   late Stream<DocumentSnapshot> _contactProfileStream;
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
 
   @override
   void initState() {
     super.initState();
+
     _contactProfileStream = FirebaseFirestore.instance
         .collection('profile')
         .doc('main_info')
         .snapshots();
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
+
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeOut,
+      ),
+    );
+
     _animationController.forward();
   }
 
@@ -54,6 +78,10 @@ class _ContactSectionState extends State<ContactSection>
     _messageController.dispose();
     super.dispose();
   }
+
+  // ---------------------------------------------------------------------------
+  // UI
+  // ---------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -85,34 +113,71 @@ class _ContactSectionState extends State<ContactSection>
               _buildSectionHeader(),
               SizedBox(height: isDesktop ? 80 : 50),
               StreamBuilder<DocumentSnapshot>(
-                  stream: _contactProfileStream,
-                  builder: (context, snapshot) {
-                    Map<String, dynamic> data = {};
-                    String name = 'Daksh Suthar';
-                    if (snapshot.hasData && snapshot.data!.exists) {
-                      data = snapshot.data!.data() as Map<String, dynamic>;
-                      if (data['name'] != null &&
-                          data['name'].toString().isNotEmpty) {
-                        name = data['name'];
-                      }
-                    }
+                stream: _contactProfileStream,
+                builder: (context, snapshot) {
+                  Map<String, dynamic> data = {};
+                  String name = 'Daksh Suthar';
 
-                    return Column(
-                      children: [
-                        isDesktop
-                            ? _buildDesktopLayout(data)
-                            : _buildMobileLayout(data),
-                        const SizedBox(height: 60),
-                        _buildFooter(name),
-                      ],
-                    );
-                  }),
+                  if (snapshot.hasData && snapshot.data!.exists) {
+                    data = snapshot.data!.data() as Map<String, dynamic>;
+                    if (data['name'] != null &&
+                        data['name'].toString().isNotEmpty) {
+                      name = data['name'];
+                    }
+                  }
+
+                  return Column(
+                    children: [
+                      isDesktop
+                          ? _buildDesktopLayout(data)
+                          : _buildMobileLayout(data),
+                      const SizedBox(height: 60),
+                      _buildFooter(name),
+                    ],
+                  );
+                },
+              ),
             ],
           ),
         ),
       ),
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Layouts
+  // ---------------------------------------------------------------------------
+
+  Widget _buildDesktopLayout(Map<String, dynamic> data) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 1,
+          child: _buildContactInfo(data),
+        ),
+        const SizedBox(width: 60),
+        Expanded(
+          flex: 2,
+          child: _buildContactForm(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(Map<String, dynamic> data) {
+    return Column(
+      children: [
+        _buildContactForm(),
+        const SizedBox(height: 50),
+        _buildContactInfo(data),
+      ],
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Header
+  // ---------------------------------------------------------------------------
 
   Widget _buildSectionHeader() {
     return Column(
@@ -159,32 +224,9 @@ class _ContactSectionState extends State<ContactSection>
     );
   }
 
-  Widget _buildDesktopLayout(Map<String, dynamic> data) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 1,
-          child: _buildContactInfo(data),
-        ),
-        const SizedBox(width: 60),
-        Expanded(
-          flex: 2,
-          child: _buildContactForm(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMobileLayout(Map<String, dynamic> data) {
-    return Column(
-      children: [
-        _buildContactForm(),
-        const SizedBox(height: 50),
-        _buildContactInfo(data),
-      ],
-    );
-  }
+  // ---------------------------------------------------------------------------
+  // Contact info & socials
+  // ---------------------------------------------------------------------------
 
   Widget _buildContactInfo(Map<String, dynamic> data) {
     final contactItems = [
@@ -223,13 +265,15 @@ class _ContactSectionState extends State<ContactSection>
           ),
         ),
         const SizedBox(height: 30),
-        ...contactItems.map((item) => _buildContactItem(
-              item['icon'] as IconData,
-              item['title'] as String,
-              item['value'] as String,
-              item['action'] as String,
-              item['url'] as String,
-            )),
+        ...contactItems.map(
+          (item) => _buildContactItem(
+            item['icon'] as IconData,
+            item['title'] as String,
+            item['value'] as String,
+            item['action'] as String,
+            item['url'] as String,
+          ),
+        ),
         const SizedBox(height: 40),
         _buildSocialLinks(data),
       ],
@@ -314,7 +358,6 @@ class _ContactSectionState extends State<ContactSection>
   }
 
   Widget _buildSocialLinks(Map<String, dynamic> data) {
-    // 1. Standard Social Links from Firestore
     final socialLinks = [
       {
         'icon': Icons.code,
@@ -349,7 +392,6 @@ class _ContactSectionState extends State<ContactSection>
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              // A. Map over existing social links
               ...socialLinks.map(
                 (social) => Padding(
                   padding: const EdgeInsets.only(right: 12),
@@ -363,8 +405,6 @@ class _ContactSectionState extends State<ContactSection>
                   ),
                 ),
               ),
-
-              // B. 🟢 ADD ADMIN BUTTON HERE (Same Style)
               Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: _SocialButton(
@@ -386,6 +426,10 @@ class _ContactSectionState extends State<ContactSection>
       ],
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Contact form
+  // ---------------------------------------------------------------------------
 
   Widget _buildContactForm() {
     return Container(
@@ -551,6 +595,10 @@ class _ContactSectionState extends State<ContactSection>
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Footer
+  // ---------------------------------------------------------------------------
+
   Widget _buildFooter(String name) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20),
@@ -571,7 +619,6 @@ class _ContactSectionState extends State<ContactSection>
               fontSize: 14,
             ),
           ),
-          // 🔴 REVERTED: Secret Logic Removed. Simple Icon only.
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 4.0),
             child: Icon(
@@ -591,6 +638,10 @@ class _ContactSectionState extends State<ContactSection>
       ),
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Actions
+  // ---------------------------------------------------------------------------
 
   Future<void> _handleSubmit() async {
     if (_formKey.currentState!.validate()) {
@@ -669,6 +720,10 @@ class _ContactSectionState extends State<ContactSection>
     }
   }
 }
+
+// -----------------------------------------------------------------------------
+// Social button
+// -----------------------------------------------------------------------------
 
 class _SocialButton extends StatefulWidget {
   final IconData icon;

@@ -4,26 +4,44 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:visibility_detector/visibility_detector.dart'; // Import this
+import 'package:visibility_detector/visibility_detector.dart';
 
 import '../utils/responsive_utils.dart';
 
 class HomeSection extends StatefulWidget {
   const HomeSection({super.key, this.onHireMeTap});
+
   final VoidCallback? onHireMeTap;
+
   @override
   State<HomeSection> createState() => _HomeSectionState();
 }
 
 class _HomeSectionState extends State<HomeSection>
     with TickerProviderStateMixin {
+  // ---------------------------------------------------------------------------
+  // Controllers & Streams
+  // ---------------------------------------------------------------------------
+
   late Stream<DocumentSnapshot> _profileStream;
+
   late AnimationController _animationController;
   late AnimationController _codeController;
+
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+
   late PageController _pageController;
+
+  // ---------------------------------------------------------------------------
+  // State
+  // ---------------------------------------------------------------------------
+
   int _currentPage = 0;
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
 
   @override
   void initState() {
@@ -35,6 +53,7 @@ class _HomeSectionState extends State<HomeSection>
         .snapshots();
 
     _pageController = PageController(initialPage: 0);
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
@@ -48,18 +67,22 @@ class _HomeSectionState extends State<HomeSection>
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      ),
+    );
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.2, 0.8, curve: Curves.easeOutCubic),
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.2, 0.8, curve: Curves.easeOutCubic),
+      ),
+    );
 
     _animationController.forward();
   }
@@ -72,11 +95,14 @@ class _HomeSectionState extends State<HomeSection>
     super.dispose();
   }
 
+  // ---------------------------------------------------------------------------
+  // UI
+  // ---------------------------------------------------------------------------
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
-    // ⚡️ PERFORMANCE FIX: Stop animation when off-screen
     return VisibilityDetector(
       key: const Key('home_animation_controller'),
       onVisibilityChanged: (info) {
@@ -117,13 +143,16 @@ class _HomeSectionState extends State<HomeSection>
                     String name = 'Daksh Suthar';
                     String? photoUrl;
                     String? resumeUrl;
+
                     if (snapshot.hasData && snapshot.data!.exists) {
                       final data =
                           snapshot.data!.data() as Map<String, dynamic>;
+
                       if (data['name'] != null &&
                           data['name'].toString().isNotEmpty) {
                         name = data['name'];
                       }
+
                       photoUrl = data['photoUrl'];
                       resumeUrl = data['resume'];
                     }
@@ -136,9 +165,17 @@ class _HomeSectionState extends State<HomeSection>
                           position: _slideAnimation,
                           child: ResponsiveUtils.isDesktop(context)
                               ? _buildDesktopLayout(
-                                  context, name, photoUrl, resumeUrl)
+                                  context,
+                                  name,
+                                  photoUrl,
+                                  resumeUrl,
+                                )
                               : _buildMobileLayout(
-                                  context, name, photoUrl, resumeUrl),
+                                  context,
+                                  name,
+                                  photoUrl,
+                                  resumeUrl,
+                                ),
                         ),
                       ),
                     );
@@ -152,8 +189,16 @@ class _HomeSectionState extends State<HomeSection>
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Layouts
+  // ---------------------------------------------------------------------------
+
   Widget _buildDesktopLayout(
-      BuildContext context, String name, String? photoUrl, String? resumeUrl) {
+    BuildContext context,
+    String name,
+    String? photoUrl,
+    String? resumeUrl,
+  ) {
     return Row(
       children: [
         Expanded(
@@ -183,7 +228,11 @@ class _HomeSectionState extends State<HomeSection>
   }
 
   Widget _buildMobileLayout(
-      BuildContext context, String name, String? photoUrl, String? resumeUrl) {
+    BuildContext context,
+    String name,
+    String? photoUrl,
+    String? resumeUrl,
+  ) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -202,15 +251,24 @@ class _HomeSectionState extends State<HomeSection>
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Text & content
+  // ---------------------------------------------------------------------------
+
   Widget _buildGreeting(BuildContext context) {
     return Container(
-      padding: ResponsiveUtils.paddingSymmetric(context,
-          horizontal: 16, vertical: 8),
+      padding: ResponsiveUtils.paddingSymmetric(
+        context,
+        horizontal: 16,
+        vertical: 8,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFF6366F1).withOpacity(0.1),
         borderRadius:
             BorderRadius.circular(ResponsiveUtils.radius(context, 50)),
-        border: Border.all(color: const Color(0xFF6366F1).withOpacity(0.3)),
+        border: Border.all(
+          color: const Color(0xFF6366F1).withOpacity(0.3),
+        ),
       ),
       child: Text(
         '👋 Hello, I\'m',
@@ -228,12 +286,13 @@ class _HomeSectionState extends State<HomeSection>
       name,
       style: TextStyle(
         fontSize: ResponsiveUtils.fontSize(
-            context,
-            ResponsiveUtils.isMobile(context)
-                ? 32
-                : ResponsiveUtils.isTablet(context)
-                    ? 40
-                    : 48),
+          context,
+          ResponsiveUtils.isMobile(context)
+              ? 32
+              : ResponsiveUtils.isTablet(context)
+                  ? 40
+                  : 48,
+        ),
         fontWeight: FontWeight.bold,
         color: Colors.white,
         height: 1.1,
@@ -254,12 +313,13 @@ class _HomeSectionState extends State<HomeSection>
               style: TextStyle(
                 color: Colors.grey[300],
                 fontSize: ResponsiveUtils.fontSize(
-                    context,
-                    ResponsiveUtils.isMobile(context)
-                        ? 18
-                        : ResponsiveUtils.isTablet(context)
-                            ? 20
-                            : 24),
+                  context,
+                  ResponsiveUtils.isMobile(context)
+                      ? 18
+                      : ResponsiveUtils.isTablet(context)
+                          ? 20
+                          : 24,
+                ),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -268,11 +328,15 @@ class _HomeSectionState extends State<HomeSection>
               width: ResponsiveUtils.width(context, 8),
               height: ResponsiveUtils.height(context, 8),
               decoration: const BoxDecoration(
-                  color: Color(0xFF10B981),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(color: Color(0xFF10B981), blurRadius: 8),
-                  ]),
+                color: Color(0xFF10B981),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0xFF10B981),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -282,12 +346,13 @@ class _HomeSectionState extends State<HomeSection>
           style: TextStyle(
             color: Colors.grey[400],
             fontSize: ResponsiveUtils.fontSize(
-                context,
-                ResponsiveUtils.isMobile(context)
-                    ? 14
-                    : ResponsiveUtils.isTablet(context)
-                        ? 16
-                        : 18),
+              context,
+              ResponsiveUtils.isMobile(context)
+                  ? 14
+                  : ResponsiveUtils.isTablet(context)
+                      ? 16
+                      : 18,
+            ),
             fontWeight: FontWeight.w400,
           ),
         ),
@@ -304,6 +369,10 @@ class _HomeSectionState extends State<HomeSection>
       ),
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Buttons
+  // ---------------------------------------------------------------------------
 
   Widget _buildActionButtons(BuildContext context, String? resumeUrl) {
     return ResponsiveUtils.isMobile(context)
@@ -328,7 +397,10 @@ class _HomeSectionState extends State<HomeSection>
       width: ResponsiveUtils.isMobile(context) ? double.infinity : null,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF6366F1), Color(0xFF10B981)],
+          colors: [
+            Color(0xFF6366F1),
+            Color(0xFF10B981),
+          ],
         ),
         borderRadius:
             BorderRadius.circular(ResponsiveUtils.radius(context, 30)),
@@ -349,17 +421,22 @@ class _HomeSectionState extends State<HomeSection>
             widget.onHireMeTap?.call();
           },
           child: Padding(
-            padding: ResponsiveUtils.paddingSymmetric(context,
-                horizontal: 32, vertical: 16),
+            padding: ResponsiveUtils.paddingSymmetric(
+              context,
+              horizontal: 32,
+              vertical: 16,
+            ),
             child: Row(
               mainAxisSize: ResponsiveUtils.isMobile(context)
                   ? MainAxisSize.max
                   : MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.work_rounded,
-                    color: Colors.white,
-                    size: ResponsiveUtils.width(context, 20)),
+                Icon(
+                  Icons.work_rounded,
+                  color: Colors.white,
+                  size: ResponsiveUtils.width(context, 20),
+                ),
                 ResponsiveUtils.horizontalSpace(context, 8),
                 Text(
                   'Hire Me',
@@ -377,7 +454,10 @@ class _HomeSectionState extends State<HomeSection>
     );
   }
 
-  Widget _buildSecondaryButton(BuildContext context, String? resumeUrl) {
+  Widget _buildSecondaryButton(
+    BuildContext context,
+    String? resumeUrl,
+  ) {
     return Container(
       width: ResponsiveUtils.isMobile(context) ? double.infinity : null,
       decoration: BoxDecoration(
@@ -394,27 +474,39 @@ class _HomeSectionState extends State<HomeSection>
           onTap: () async {
             if (resumeUrl == null || resumeUrl.isEmpty) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Resume link not available yet!")),
+                const SnackBar(
+                  content: Text("Resume link not available yet!"),
+                ),
               );
               return;
             }
+
             final Uri url = Uri.parse(resumeUrl);
-            if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+
+            if (!await launchUrl(
+              url,
+              mode: LaunchMode.externalApplication,
+            )) {
               throw Exception("Could not launch $url");
             }
           },
           child: Padding(
-            padding: ResponsiveUtils.paddingSymmetric(context,
-                horizontal: 32, vertical: 16),
+            padding: ResponsiveUtils.paddingSymmetric(
+              context,
+              horizontal: 32,
+              vertical: 16,
+            ),
             child: Row(
               mainAxisSize: ResponsiveUtils.isMobile(context)
                   ? MainAxisSize.max
                   : MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.download_rounded,
-                    color: Colors.white,
-                    size: ResponsiveUtils.width(context, 20)),
+                Icon(
+                  Icons.download_rounded,
+                  color: Colors.white,
+                  size: ResponsiveUtils.width(context, 20),
+                ),
                 ResponsiveUtils.horizontalSpace(context, 8),
                 Text(
                   'Resume',
@@ -431,6 +523,10 @@ class _HomeSectionState extends State<HomeSection>
       ),
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Profile / cube image
+  // ---------------------------------------------------------------------------
 
   Widget _buildProfileImage(BuildContext context, String? photoUrl) {
     final imageSize = ResponsiveUtils.isMobile(context)
@@ -462,7 +558,10 @@ class _HomeSectionState extends State<HomeSection>
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
-                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                  colors: [
+                    Color(0xFF6366F1),
+                    Color(0xFF8B5CF6),
+                  ],
                 ),
               ),
               child: ClipOval(
@@ -590,9 +689,15 @@ class _HomeSectionState extends State<HomeSection>
   }
 }
 
+// -----------------------------------------------------------------------------
+// Background code animation
+// -----------------------------------------------------------------------------
+
 class CodePainter extends CustomPainter {
   final double animationValue;
+
   static final List<CodeParticle> particles = [];
+
   final Random random = Random();
 
   CodePainter(this.animationValue) {
@@ -607,6 +712,7 @@ class CodePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     for (final particle in particles) {
       double yPos = particle.y - (animationValue * particle.speed * 1.5);
+
       if (yPos < -0.1) yPos = (yPos % 1.0) + 1.0;
 
       final x = particle.x * size.width;
@@ -656,8 +762,9 @@ class CodeParticle {
     '&&',
     'x',
     '!=',
-    '??'
+    '??',
   ];
+
   static final List<Color> colors = [
     const Color(0xFF6366F1),
     const Color(0xFF10B981),

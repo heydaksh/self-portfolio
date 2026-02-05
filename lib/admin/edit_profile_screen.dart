@@ -3,6 +3,10 @@ import 'package:cloudinary_public/cloudinary_public.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+// -----------------------------------------------------------------------------
+// Edit Profile Screen
+// -----------------------------------------------------------------------------
+
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
 
@@ -11,6 +15,10 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
+  // ---------------------------------------------------------------------------
+  // Controllers
+  // ---------------------------------------------------------------------------
+
   final _nameController = TextEditingController();
   final _bioController = TextEditingController();
   final _emailController = TextEditingController();
@@ -22,10 +30,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _resumeController = TextEditingController();
   final _experienceController = TextEditingController();
 
+  // ---------------------------------------------------------------------------
+  // Image picker & state
+  // ---------------------------------------------------------------------------
+
   final ImagePicker _picker = ImagePicker();
   XFile? _selectedImage;
   String? _existingImageUrl;
+
   bool _isLoading = false;
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
 
   @override
   void initState() {
@@ -33,15 +50,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _loadProfileData();
   }
 
+  // ---------------------------------------------------------------------------
+  // Data loading
+  // ---------------------------------------------------------------------------
+
   Future<void> _loadProfileData() async {
     setState(() => _isLoading = true);
+
     try {
       final doc = await FirebaseFirestore.instance
           .collection('profile')
           .doc('main_info')
           .get();
+
       if (doc.exists && doc.data() != null) {
         final data = doc.data()!;
+
         _nameController.text = data['name'] ?? '';
         _bioController.text = data['bio'] ?? '';
         _emailController.text = data['email'] ?? '';
@@ -55,32 +79,45 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         _existingImageUrl = data['photoUrl'];
       }
     } catch (e) {
-      print("Error loading profile: $e");
+      debugPrint("Error loading profile: $e");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Image picking
+  // ---------------------------------------------------------------------------
+
   Future<void> _pickImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+
     if (image != null) {
       setState(() => _selectedImage = image);
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Save profile
+  // ---------------------------------------------------------------------------
+
   Future<void> _saveProfile() async {
     setState(() => _isLoading = true);
+
     try {
       String photoUrl = _existingImageUrl ?? '';
 
       if (_selectedImage != null) {
-        // Use keys from AddProjectScreen
         final cloudinary =
             CloudinaryPublic('dmx6js0vk', 'my_portfolio_preset', cache: false);
+
         CloudinaryResponse response = await cloudinary.uploadFile(
-          CloudinaryFile.fromFile(_selectedImage!.path,
-              resourceType: CloudinaryResourceType.Image),
+          CloudinaryFile.fromFile(
+            _selectedImage!.path,
+            resourceType: CloudinaryResourceType.Image,
+          ),
         );
+
         photoUrl = response.secureUrl;
       }
 
@@ -103,10 +140,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }, SetOptions(merge: true));
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Profile Updated Successfully!'),
-          backgroundColor: Color(0xFF6366F1),
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile Updated Successfully!'),
+            backgroundColor: Color(0xFF6366F1),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -118,16 +157,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // UI
+  // ---------------------------------------------------------------------------
+
   @override
   Widget build(BuildContext context) {
     return _isLoading
-        ? const Center(child: CircularProgressIndicator(color: Colors.white))
+        ? const Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          )
         : SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 📸 PROFILE PHOTO PICKER
+                // 📸 Profile photo picker
                 Center(
                   child: GestureDetector(
                     onTap: _pickImage,
@@ -139,7 +184,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                                color: const Color(0xFF6366F1), width: 3),
+                              color: const Color(0xFF6366F1),
+                              width: 3,
+                            ),
                             boxShadow: [
                               BoxShadow(
                                 color: const Color(0xFF6366F1).withOpacity(0.3),
@@ -150,16 +197,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           ),
                           child: ClipOval(
                             child: _selectedImage != null
-                                ? Image.network(_selectedImage!.path,
-                                    fit: BoxFit.cover)
+                                ? Image.network(
+                                    _selectedImage!.path,
+                                    fit: BoxFit.cover,
+                                  )
                                 : (_existingImageUrl != null &&
                                         _existingImageUrl!.isNotEmpty)
-                                    ? Image.network(_existingImageUrl!,
-                                        fit: BoxFit.cover)
+                                    ? Image.network(
+                                        _existingImageUrl!,
+                                        fit: BoxFit.cover,
+                                      )
                                     : Container(
                                         color: Colors.white.withOpacity(0.05),
-                                        child: const Icon(Icons.person,
-                                            size: 70, color: Colors.white24),
+                                        child: const Icon(
+                                          Icons.person,
+                                          size: 70,
+                                          color: Colors.white24,
+                                        ),
                                       ),
                           ),
                         ),
@@ -172,8 +226,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               color: Color(0xFF6366F1),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.camera_alt,
-                                size: 20, color: Colors.white),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              size: 20,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],
@@ -184,69 +241,84 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                 _buildSectionTitle("Personal Info"),
                 _buildGlassTextField(
-                    controller: _nameController,
-                    label: 'Full Name',
-                    icon: Icons.person),
+                  controller: _nameController,
+                  label: 'Full Name',
+                  icon: Icons.person,
+                ),
                 const SizedBox(height: 15),
                 _buildGlassTextField(
-                    controller: _locationController,
-                    label: 'Location',
-                    icon: Icons.location_on),
+                  controller: _locationController,
+                  label: 'Location',
+                  icon: Icons.location_on,
+                ),
                 const SizedBox(height: 15),
                 _buildGlassTextField(
-                    maxLines: 4,
-                    controller: _bioController,
-                    label: 'Bio',
-                    icon: Icons.info_outline),
+                  controller: _bioController,
+                  label: 'Bio',
+                  icon: Icons.info_outline,
+                  maxLines: 4,
+                ),
                 const SizedBox(height: 15),
                 _buildGlassTextField(
-                    controller: _experienceController,
-                    label: 'Experience (e.g. 5+ Months)',
-                    icon: Icons.work_history),
+                  controller: _experienceController,
+                  label: 'Experience (e.g. 5+ Months)',
+                  icon: Icons.work_history,
+                ),
                 const SizedBox(height: 30),
+
                 _buildSectionTitle("Contact Info"),
                 _buildGlassTextField(
-                    controller: _emailController,
-                    label: 'Email',
-                    icon: Icons.email),
+                  controller: _emailController,
+                  label: 'Email',
+                  icon: Icons.email,
+                ),
                 const SizedBox(height: 15),
                 _buildGlassTextField(
-                    controller: _phoneController,
-                    label: 'Phone',
-                    icon: Icons.phone),
+                  controller: _phoneController,
+                  label: 'Phone',
+                  icon: Icons.phone,
+                ),
                 const SizedBox(height: 30),
+
                 _buildSectionTitle("Links"),
                 _buildGlassTextField(
-                    controller: _githubController,
-                    label: 'GitHub URL',
-                    icon: Icons.code),
+                  controller: _githubController,
+                  label: 'GitHub URL',
+                  icon: Icons.code,
+                ),
                 const SizedBox(height: 15),
                 _buildGlassTextField(
-                    controller: _linkedinController,
-                    label: 'LinkedIn URL',
-                    icon: Icons.link),
+                  controller: _linkedinController,
+                  label: 'LinkedIn URL',
+                  icon: Icons.link,
+                ),
                 const SizedBox(height: 15),
                 _buildGlassTextField(
-                    controller: _twitterController,
-                    label: 'Twitter URL',
-                    icon: Icons.alternate_email),
+                  controller: _twitterController,
+                  label: 'Twitter URL',
+                  icon: Icons.alternate_email,
+                ),
                 const SizedBox(height: 15),
                 _buildGlassTextField(
-                    controller: _resumeController,
-                    label: 'Resume (Google Drive)',
-                    icon: Icons.description),
+                  controller: _resumeController,
+                  label: 'Resume (Google Drive)',
+                  icon: Icons.description,
+                ),
                 const SizedBox(height: 40),
+
                 Container(
                   height: 55,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                        colors: [Color(0xFF6366F1), Color(0xFF10B981)]),
+                      colors: [Color(0xFF6366F1), Color(0xFF10B981)],
+                    ),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                          color: const Color(0xFF6366F1).withOpacity(0.4),
-                          blurRadius: 12,
-                          offset: const Offset(0, 6)),
+                        color: const Color(0xFF6366F1).withOpacity(0.4),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
                     ],
                   ),
                   child: ElevatedButton(
@@ -255,13 +327,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       backgroundColor: Colors.transparent,
                       shadowColor: Colors.transparent,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
-                    child: const Text('Update Profile',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'Update Profile',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -269,13 +345,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           );
   }
 
+  // ---------------------------------------------------------------------------
+  // Small helpers
+  // ---------------------------------------------------------------------------
+
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15.0),
       child: Text(
         title,
         style: const TextStyle(
-            fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
       ),
     );
   }

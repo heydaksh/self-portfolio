@@ -16,9 +16,22 @@ class FloatingActionMenu extends StatefulWidget {
 
 class _FloatingActionMenuState extends State<FloatingActionMenu>
     with TickerProviderStateMixin {
+  // ---------------------------------------------------------------------------
+  // State
+  // ---------------------------------------------------------------------------
+
   bool _isVisible = false;
-  late AnimationController _animationController;
-  late Animation<double> _animation;
+
+  // ---------------------------------------------------------------------------
+  // Animation
+  // ---------------------------------------------------------------------------
+
+  late final AnimationController _animationController;
+  late final Animation<double> _animation;
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
 
   @override
   void initState() {
@@ -44,10 +57,16 @@ class _FloatingActionMenuState extends State<FloatingActionMenu>
     super.dispose();
   }
 
+  // ---------------------------------------------------------------------------
+  // Scroll handling
+  // ---------------------------------------------------------------------------
+
   void _onScroll() {
     final shouldShow = widget.scrollController.offset > 200;
+
     if (shouldShow != _isVisible) {
       setState(() => _isVisible = shouldShow);
+
       if (shouldShow) {
         _animationController.forward();
       } else {
@@ -55,6 +74,10 @@ class _FloatingActionMenuState extends State<FloatingActionMenu>
       }
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // UI
+  // ---------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {

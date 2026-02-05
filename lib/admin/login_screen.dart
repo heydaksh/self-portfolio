@@ -5,6 +5,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:my_portfolio_main/admin/dashboard_screen.dart';
 
+// -----------------------------------------------------------------------------
+// Login Screen
+// -----------------------------------------------------------------------------
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -14,17 +18,29 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen>
     with TickerProviderStateMixin {
+  // ---------------------------------------------------------------------------
+  // Controllers & State
+  // ---------------------------------------------------------------------------
+
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
   bool _isLoading = false;
 
-  // Animation Controllers
+  // ---------------------------------------------------------------------------
+  // Animations
+  // ---------------------------------------------------------------------------
+
   late AnimationController _codeController;
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
 
   @override
   void initState() {
     super.initState();
-    // Initialize Code Rain Animation
+
     _codeController = AnimationController(
       duration: const Duration(seconds: 20),
       vsync: this,
@@ -39,29 +55,41 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
+  // ---------------------------------------------------------------------------
+  // Actions
+  // ---------------------------------------------------------------------------
+
   Future<void> _login() async {
     setState(() => _isLoading = true);
 
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim());
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
 
       if (mounted) {
         Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const DashboardScreen()));
+          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+        );
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Error: ${e.message}"),
-          backgroundColor: Colors.red,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error: ${e.message}"),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // UI
+  // ---------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -79,8 +107,8 @@ class _LoginScreenState extends State<LoginScreen>
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFF0F172A), // Dark Navy
-                  Color(0xFF1E293B), // Slate
+                  Color(0xFF0F172A),
+                  Color(0xFF1E293B),
                 ],
               ),
             ),
@@ -105,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen>
                   width: 400,
                   padding: const EdgeInsets.all(40),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1), // Glass effect
+                    color: Colors.white.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: Colors.white.withOpacity(0.2),
@@ -115,7 +143,7 @@ class _LoginScreenState extends State<LoginScreen>
                         color: Colors.black.withOpacity(0.2),
                         blurRadius: 30,
                         offset: const Offset(0, 10),
-                      )
+                      ),
                     ],
                   ),
                   child: Column(
@@ -124,7 +152,7 @@ class _LoginScreenState extends State<LoginScreen>
                       const Icon(
                         Icons.admin_panel_settings_rounded,
                         size: 60,
-                        color: Color(0xFF6366F1), // Indigo
+                        color: Color(0xFF6366F1),
                       ),
                       const SizedBox(height: 20),
                       const Text(
@@ -145,12 +173,15 @@ class _LoginScreenState extends State<LoginScreen>
                           labelText: 'Email',
                           labelStyle:
                               TextStyle(color: Colors.white.withOpacity(0.7)),
-                          prefixIcon: const Icon(Icons.email_outlined,
-                              color: Colors.white70),
+                          prefixIcon: const Icon(
+                            Icons.email_outlined,
+                            color: Colors.white70,
+                          ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                                color: Colors.white.withOpacity(0.3)),
+                              color: Colors.white.withOpacity(0.3),
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -172,12 +203,15 @@ class _LoginScreenState extends State<LoginScreen>
                           labelText: 'Password',
                           labelStyle:
                               TextStyle(color: Colors.white.withOpacity(0.7)),
-                          prefixIcon: const Icon(Icons.lock_outline,
-                              color: Colors.white70),
+                          prefixIcon: const Icon(
+                            Icons.lock_outline,
+                            color: Colors.white70,
+                          ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                                color: Colors.white.withOpacity(0.3)),
+                              color: Colors.white.withOpacity(0.3),
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -190,7 +224,7 @@ class _LoginScreenState extends State<LoginScreen>
                       ),
                       const SizedBox(height: 30),
 
-                      // Login Button with Gradient
+                      // Login Button
                       Container(
                         width: double.infinity,
                         height: 50,
@@ -221,7 +255,9 @@ class _LoginScreenState extends State<LoginScreen>
                                   width: 24,
                                   height: 24,
                                   child: CircularProgressIndicator(
-                                      color: Colors.white, strokeWidth: 2),
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : const Text(
                                   'Login',
@@ -232,7 +268,7 @@ class _LoginScreenState extends State<LoginScreen>
                                   ),
                                 ),
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -245,9 +281,9 @@ class _LoginScreenState extends State<LoginScreen>
   }
 }
 
-// -----------------------------------------------------------
-// Animation Classes (Copied from HomeSection to make this file self-contained)
-// -----------------------------------------------------------
+// -----------------------------------------------------------------------------
+// Animation Classes (kept self-contained – same logic, only grouped)
+// -----------------------------------------------------------------------------
 
 class CodePainter extends CustomPainter {
   final double animationValue;
@@ -255,7 +291,7 @@ class CodePainter extends CustomPainter {
 
   CodePainter(this.animationValue) {
     if (particles.isEmpty) {
-      for (int i = 0; i < 40; i++) {
+      for (int i = 0; i < 50; i++) {
         particles.add(CodeParticle());
       }
     }
@@ -264,7 +300,7 @@ class CodePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (final particle in particles) {
-      double yPos = particle.y - (animationValue * particle.speed * 2);
+      double yPos = particle.y - (animationValue * particle.speed * 1.5);
       if (yPos < -0.1) yPos = (yPos % 1.0) + 1.0;
 
       final x = particle.x * size.width;
@@ -275,7 +311,7 @@ class CodePainter extends CustomPainter {
         style: TextStyle(
           color: particle.color.withOpacity(particle.opacity),
           fontSize: particle.size,
-          fontFamily: 'Courier', // Monospace font for code look
+          fontFamily: 'Courier',
           fontWeight: FontWeight.bold,
         ),
       );
@@ -316,10 +352,11 @@ class CodeParticle {
     '!=',
     '??'
   ];
+
   static final List<Color> colors = [
-    const Color(0xFF6366F1), // Indigo
-    const Color(0xFF10B981), // Green
-    const Color(0xFF3B82F6), // Blue
+    const Color(0xFF6366F1),
+    const Color(0xFF10B981),
+    const Color(0xFF3B82F6),
     Colors.white,
   ];
 

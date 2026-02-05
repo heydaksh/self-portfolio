@@ -5,8 +5,13 @@ import 'package:cloudinary_public/cloudinary_public.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+// -----------------------------------------------------------------------------
+// Add / Edit Project Screen
+// -----------------------------------------------------------------------------
+
 class AddProjectScreen extends StatefulWidget {
   final DocumentSnapshot? projectDoc;
+
   const AddProjectScreen({super.key, this.projectDoc});
 
   @override
@@ -14,6 +19,10 @@ class AddProjectScreen extends StatefulWidget {
 }
 
 class _AddProjectScreenState extends State<AddProjectScreen> {
+  // ---------------------------------------------------------------------------
+  // Controllers & State
+  // ---------------------------------------------------------------------------
+
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
   final _techController = TextEditingController();
@@ -23,8 +32,9 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
   String _selectedCategory = 'Mobile';
   final List<String> _categories = ['Mobile', 'Web'];
 
-  // 🎨 Color Selection Variables
-  String _selectedColor = '6366F1'; // Default Indigo
+  //  Color Selection
+  String _selectedColor = '6366F1';
+
   final Map<String, Color> _colors = {
     'Indigo': const Color(0xFF6366F1),
     'Blue': const Color(0xFF3B82F6),
@@ -43,15 +53,23 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
   };
 
   final ImagePicker _picker = ImagePicker();
+
   XFile? _selectedImage;
   String? _existingImageUrl;
+
   bool _isLoading = false;
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
 
   @override
   void initState() {
     super.initState();
+
     if (widget.projectDoc != null) {
       final data = widget.projectDoc!.data() as Map<String, dynamic>;
+
       _titleController.text = data['title'] ?? '';
       _descController.text = data['description'] ?? '';
       _githubController.text = data['githubUrl'] ?? '';
@@ -59,7 +77,6 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
       _selectedCategory = data['category'] ?? 'Mobile';
       _existingImageUrl = data['imageUrl'];
 
-      // Load existing color
       if (data['color'] != null) {
         _selectedColor = data['color'].toString().replaceAll('#', '');
       }
@@ -68,6 +85,10 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
       _techController.text = techs.join(', ');
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Actions
+  // ---------------------------------------------------------------------------
 
   Future<void> _pickImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
@@ -82,18 +103,23 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
           .showSnackBar(const SnackBar(content: Text('Title is required')));
       return;
     }
+
     setState(() => _isLoading = true);
 
     try {
       String imageUrl = _existingImageUrl ?? '';
+
       if (_selectedImage != null) {
-        // ⚠️ REPLACE WITH YOUR CLOUDINARY KEYS
         final cloudinary =
             CloudinaryPublic('dmx6js0vk', 'my_portfolio_preset', cache: false);
+
         CloudinaryResponse response = await cloudinary.uploadFile(
-          CloudinaryFile.fromFile(_selectedImage!.path,
-              resourceType: CloudinaryResourceType.Image),
+          CloudinaryFile.fromFile(
+            _selectedImage!.path,
+            resourceType: CloudinaryResourceType.Image,
+          ),
         );
+
         imageUrl = response.secureUrl;
       }
 
@@ -108,7 +134,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
         'technologies': techList,
         'githubUrl': _githubController.text.trim(),
         'liveUrl': _liveController.text.trim(),
-        'color': '#$_selectedColor', // 🟢 Save selected color
+        'color': '#$_selectedColor',
         'timestamp': FieldValue.serverTimestamp(),
       };
 
@@ -131,12 +157,20 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // UI
+  // ---------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -152,13 +186,17 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
             ),
           ),
         ),
+
         Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
             title: Text(
-                widget.projectDoc != null ? 'Edit Project' : 'Add New Project',
-                style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold)),
+              widget.projectDoc != null ? 'Edit Project' : 'Add New Project',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             backgroundColor: Colors.white.withOpacity(0.05),
             elevation: 0,
             iconTheme: const IconThemeData(color: Colors.white),
@@ -183,69 +221,95 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                       color: Colors.white.withOpacity(0.05),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color: Colors.white.withOpacity(0.2), width: 1),
+                        color: Colors.white.withOpacity(0.2),
+                        width: 1,
+                      ),
                     ),
                     child: _selectedImage != null
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(20),
-                            child: Image.network(_selectedImage!.path,
-                                fit: BoxFit.cover),
+                            child: Image.network(
+                              _selectedImage!.path,
+                              fit: BoxFit.cover,
+                            ),
                           )
                         : (_existingImageUrl != null &&
                                 _existingImageUrl!.isNotEmpty)
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(20),
-                                child: Image.network(_existingImageUrl!,
-                                    fit: BoxFit.cover),
+                                child: Image.network(
+                                  _existingImageUrl!,
+                                  fit: BoxFit.cover,
+                                ),
                               )
                             : Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.add_photo_alternate_rounded,
-                                      size: 50,
-                                      color: Colors.white.withOpacity(0.5)),
+                                  Icon(
+                                    Icons.add_photo_alternate_rounded,
+                                    size: 50,
+                                    color: Colors.white.withOpacity(0.5),
+                                  ),
                                   const SizedBox(height: 10),
-                                  Text("Tap to select Image",
-                                      style: TextStyle(
-                                          color:
-                                              Colors.white.withOpacity(0.5))),
+                                  Text(
+                                    "Tap to select Image",
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.5),
+                                    ),
+                                  ),
                                 ],
                               ),
                   ),
                 ),
+
                 const SizedBox(height: 30),
 
                 _buildGlassTextField(
-                    controller: _titleController,
-                    label: 'Project Title',
-                    icon: Icons.title),
-                const SizedBox(height: 20),
-                _buildGlassTextField(
-                    controller: _descController,
-                    label: 'Description',
-                    icon: Icons.description,
-                    maxLines: 3),
+                  controller: _titleController,
+                  label: 'Project Title',
+                  icon: Icons.title,
+                ),
+
                 const SizedBox(height: 20),
 
-                // Dropdown
+                _buildGlassTextField(
+                  controller: _descController,
+                  label: 'Description',
+                  icon: Icons.description,
+                  maxLines: 3,
+                ),
+
+                const SizedBox(height: 20),
+
+                // Category Dropdown
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.2),
+                    ),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _selectedCategory,
                       dropdownColor: const Color(0xFF1E293B),
                       style: const TextStyle(color: Colors.white),
-                      icon: const Icon(Icons.arrow_drop_down,
-                          color: Colors.white),
+                      icon: const Icon(
+                        Icons.arrow_drop_down,
+                        color: Colors.white,
+                      ),
                       items: _categories
                           .map(
-                              (c) => DropdownMenuItem(value: c, child: Text(c)))
+                            (c) => DropdownMenuItem(
+                              value: c,
+                              child: Text(c),
+                            ),
+                          )
                           .toList(),
                       onChanged: (val) =>
                           setState(() => _selectedCategory = val!),
@@ -254,27 +318,38 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                 ),
 
                 const SizedBox(height: 20),
+
                 _buildGlassTextField(
-                    controller: _techController,
-                    label: 'Technologies (comma separated)',
-                    icon: Icons.code),
+                  controller: _techController,
+                  label: 'Technologies (comma separated)',
+                  icon: Icons.code,
+                ),
+
                 const SizedBox(height: 20),
+
                 _buildGlassTextField(
-                    controller: _githubController,
-                    label: 'GitHub Link',
-                    icon: Icons.link),
+                  controller: _githubController,
+                  label: 'GitHub Link',
+                  icon: Icons.link,
+                ),
+
                 const SizedBox(height: 20),
+
                 _buildGlassTextField(
-                    controller: _liveController,
-                    label: 'Live Link',
-                    icon: Icons.launch),
+                  controller: _liveController,
+                  label: 'Live Link',
+                  icon: Icons.launch,
+                ),
 
                 const SizedBox(height: 30),
 
-                // 🎨 Color Picker UI
-                const Text("Card Shadow Color",
-                    style: TextStyle(color: Colors.white70, fontSize: 16)),
+                const Text(
+                  "Card Shadow Color",
+                  style: TextStyle(color: Colors.white70, fontSize: 16),
+                ),
+
                 const SizedBox(height: 10),
+
                 Wrap(
                   spacing: 15,
                   runSpacing: 15,
@@ -284,7 +359,9 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                         .toRadixString(16)
                         .substring(2)
                         .toUpperCase();
+
                     final isSelected = _selectedColor == colorHex;
+
                     return GestureDetector(
                       onTap: () => setState(() => _selectedColor = colorHex),
                       child: AnimatedContainer(
@@ -295,18 +372,25 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                           color: entry.value,
                           shape: BoxShape.circle,
                           border: isSelected
-                              ? Border.all(color: Colors.white, width: 3)
+                              ? Border.all(
+                                  color: Colors.white,
+                                  width: 3,
+                                )
                               : null,
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                      color: entry.value.withOpacity(0.5),
-                                      blurRadius: 10)
+                                    color: entry.value.withOpacity(0.5),
+                                    blurRadius: 10,
+                                  )
                                 ]
                               : [],
                         ),
                         child: isSelected
-                            ? const Icon(Icons.check, color: Colors.white)
+                            ? const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                              )
                             : null,
                       ),
                     );
@@ -320,13 +404,15 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                   height: 55,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                        colors: [Color(0xFF6366F1), Color(0xFF10B981)]),
+                      colors: [Color(0xFF6366F1), Color(0xFF10B981)],
+                    ),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                          color: const Color(0xFF6366F1).withOpacity(0.4),
-                          blurRadius: 12,
-                          offset: const Offset(0, 6)),
+                        color: const Color(0xFF6366F1).withOpacity(0.4),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
                     ],
                   ),
                   child: ElevatedButton(
@@ -335,18 +421,23 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                       backgroundColor: Colors.transparent,
                       shadowColor: Colors.transparent,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                     child: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
+                        ? const CircularProgressIndicator(
+                            color: Colors.white,
+                          )
                         : Text(
                             widget.projectDoc != null
                                 ? 'Update Project'
                                 : 'Save Project',
                             style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold)),
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
               ],
@@ -356,6 +447,10 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
       ],
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
 
   Widget _buildGlassTextField({
     required TextEditingController controller,

@@ -3,12 +3,16 @@ import 'dart:ui'; // For BackdropFilter
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:my_portfolio_main/admin/add_experience_section.dart';
-import 'package:my_portfolio_main/admin/add_skill_section.dart';
 
+import 'add_experience_section.dart';
 import 'add_project_screen.dart';
+import 'add_skill_section.dart';
 import 'edit_profile_screen.dart';
 import 'login_screen.dart';
+
+// -----------------------------------------------------------------------------
+// Dashboard Screen
+// -----------------------------------------------------------------------------
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -19,75 +23,36 @@ class DashboardScreen extends StatelessWidget {
       length: 4,
       child: Stack(
         children: [
-          // 1. Global Dark Gradient Background
+          // -------------------------------------------------------------------
+          // Global Background
+          // -------------------------------------------------------------------
           Container(
-            height: double.infinity,
             width: double.infinity,
+            height: double.infinity,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFF0F172A), // Dark Navy
-                  Color(0xFF1E293B), // Slate
+                  Color(0xFF0F172A),
+                  Color(0xFF1E293B),
                 ],
               ),
             ),
           ),
 
-          // 2. Main Content
+          // -------------------------------------------------------------------
+          // Main Scaffold
+          // -------------------------------------------------------------------
           Scaffold(
-            backgroundColor: Colors.transparent, // Let gradient show through
-            appBar: AppBar(
-              title: const Text("Admin Panel",
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold)),
-              backgroundColor: Colors.white.withOpacity(0.05), // Glassy Header
-              elevation: 0,
-              centerTitle: true,
-              leading: Container(), // Hide back button
-              flexibleSpace: ClipRRect(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(color: Colors.transparent),
-                ),
-              ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.logout_rounded, color: Colors.white70),
-                  tooltip: "Logout",
-                  onPressed: () async {
-                    await FirebaseAuth.instance.signOut();
-                    if (context.mounted) {
-                      Navigator.of(context).pushReplacement(MaterialPageRoute(
-                          builder: (_) => const LoginScreen()));
-                    }
-                  },
-                ),
-                const SizedBox(width: 10),
-              ],
-              bottom: const TabBar(
-                labelColor: Color(0xFF6366F1), // Indigo for active tab
-                unselectedLabelColor: Colors.white60,
-                indicatorColor: Color(0xFF6366F1),
-                indicatorWeight: 3,
-                dividerColor: Colors.transparent,
-                labelStyle:
-                    TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                tabs: [
-                  Tab(icon: Icon(Icons.dashboard_rounded), text: "Projects"),
-                  Tab(icon: Icon(Icons.history_edu_rounded), text: "Exp."),
-                  Tab(icon: Icon(Icons.bar_chart_rounded), text: "Skills"),
-                  Tab(icon: Icon(Icons.person_rounded), text: "Profile"),
-                ],
-              ),
-            ),
-            body: TabBarView(
+            backgroundColor: Colors.transparent,
+            appBar: _buildAppBar(context),
+            body: const TabBarView(
               children: [
-                _buildProjectList(context),
-                _buildExperienceList(context),
-                _buildSkillList(context),
-                const EditProfileScreen(), // You might need to style this screen separately later
+                _ProjectsTab(),
+                _ExperienceTab(),
+                _SkillsTab(),
+                EditProfileScreen(),
               ],
             ),
           ),
@@ -96,14 +61,75 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  // 1️⃣ PROJECTS LIST
-  Widget _buildProjectList(BuildContext context) {
+  // ---------------------------------------------------------------------------
+  // AppBar
+  // ---------------------------------------------------------------------------
+
+  AppBar _buildAppBar(BuildContext context) {
+    return AppBar(
+      centerTitle: true,
+      elevation: 0,
+      leading: const SizedBox.shrink(),
+      backgroundColor: Colors.white.withOpacity(0.05),
+      title: const Text(
+        "Admin Panel",
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      ),
+      flexibleSpace: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(color: Colors.transparent),
+        ),
+      ),
+      actions: [
+        IconButton(
+          tooltip: "Logout",
+          icon: const Icon(Icons.logout_rounded, color: Colors.white70),
+          onPressed: () async {
+            await FirebaseAuth.instance.signOut();
+            if (context.mounted) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+              );
+            }
+          },
+        ),
+        const SizedBox(width: 10),
+      ],
+      bottom: const TabBar(
+        labelColor: Color(0xFF6366F1),
+        unselectedLabelColor: Colors.white60,
+        indicatorColor: Color(0xFF6366F1),
+        indicatorWeight: 3,
+        dividerColor: Colors.transparent,
+        labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        tabs: [
+          Tab(icon: Icon(Icons.dashboard_rounded), text: "Projects"),
+          Tab(icon: Icon(Icons.history_edu_rounded), text: "Exp."),
+          Tab(icon: Icon(Icons.bar_chart_rounded), text: "Skills"),
+          Tab(icon: Icon(Icons.person_rounded), text: "Profile"),
+        ],
+      ),
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+// PROJECTS TAB
+// -----------------------------------------------------------------------------
+
+class _ProjectsTab extends StatelessWidget {
+  const _ProjectsTab();
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      floatingActionButton: _buildGradientFAB(
-        context,
-        onPressed: () => Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const AddProjectScreen())),
+      floatingActionButton: _GradientFAB(
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AddProjectScreen()),
+        ),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -113,8 +139,10 @@ class DashboardScreen extends StatelessWidget {
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(
-                child: CircularProgressIndicator(color: Color(0xFF6366F1)));
+              child: CircularProgressIndicator(color: Color(0xFF6366F1)),
+            );
           }
+
           if (snapshot.data!.docs.isEmpty) {
             return const Center(
               child: Text("No projects yet.",
@@ -129,15 +157,19 @@ class DashboardScreen extends StatelessWidget {
               final doc = snapshot.data!.docs[index];
               final data = doc.data() as Map<String, dynamic>;
 
-              return _buildGlassCard(
+              return _GlassCard(
                 child: ListTile(
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   leading: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: data['imageUrl'] != ''
-                        ? Image.network(data['imageUrl'],
-                            width: 60, height: 60, fit: BoxFit.cover)
+                        ? Image.network(
+                            data['imageUrl'],
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                          )
                         : Container(
                             width: 60,
                             height: 60,
@@ -149,38 +181,29 @@ class DashboardScreen extends StatelessWidget {
                   title: Text(
                     data['title'],
                     style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18),
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
                   ),
                   subtitle: Padding(
                     padding: const EdgeInsets.only(top: 8.0),
                     child: Text(
                       data['category'],
                       style: const TextStyle(
-                          color: Color(0xFF6366F1),
-                          fontWeight: FontWeight.w500),
+                        color: Color(0xFF6366F1),
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildIconButton(
-                        icon: Icons.edit_rounded,
-                        color: Colors.blueAccent,
-                        onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) =>
-                                    AddProjectScreen(projectDoc: doc))),
+                  trailing: _ActionButtons(
+                    onEdit: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AddProjectScreen(projectDoc: doc),
                       ),
-                      const SizedBox(width: 10),
-                      _buildIconButton(
-                        icon: Icons.delete_rounded,
-                        color: Colors.redAccent,
-                        onTap: () => _deleteItem(context, 'projects', doc.id),
-                      ),
-                    ],
+                    ),
+                    onDelete: () => _deleteItem(context, 'projects', doc.id),
                   ),
                 ),
               );
@@ -190,15 +213,24 @@ class DashboardScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  // 2️⃣ EXPERIENCE LIST
-  Widget _buildExperienceList(BuildContext context) {
+// -----------------------------------------------------------------------------
+// EXPERIENCE TAB
+// -----------------------------------------------------------------------------
+
+class _ExperienceTab extends StatelessWidget {
+  const _ExperienceTab();
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      floatingActionButton: _buildGradientFAB(
-        context,
-        onPressed: () => Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const AddExperienceScreen())),
+      floatingActionButton: _GradientFAB(
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AddExperienceScreen()),
+        ),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -208,7 +240,8 @@ class DashboardScreen extends StatelessWidget {
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(
-                child: CircularProgressIndicator(color: Color(0xFF6366F1)));
+              child: CircularProgressIndicator(color: Color(0xFF6366F1)),
+            );
           }
 
           return ListView.builder(
@@ -218,7 +251,7 @@ class DashboardScreen extends StatelessWidget {
               final doc = snapshot.data!.docs[index];
               final data = doc.data() as Map<String, dynamic>;
 
-              return _buildGlassCard(
+              return _GlassCard(
                 child: ListTile(
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -240,25 +273,14 @@ class DashboardScreen extends StatelessWidget {
                     data['company'],
                     style: const TextStyle(color: Colors.white70),
                   ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildIconButton(
-                        icon: Icons.edit_rounded,
-                        color: Colors.blueAccent,
-                        onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) =>
-                                    AddExperienceScreen(experienceDoc: doc))),
+                  trailing: _ActionButtons(
+                    onEdit: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AddExperienceScreen(experienceDoc: doc),
                       ),
-                      const SizedBox(width: 10),
-                      _buildIconButton(
-                        icon: Icons.delete_rounded,
-                        color: Colors.redAccent,
-                        onTap: () => _deleteItem(context, 'experience', doc.id),
-                      ),
-                    ],
+                    ),
+                    onDelete: () => _deleteItem(context, 'experience', doc.id),
                   ),
                 ),
               );
@@ -268,15 +290,24 @@ class DashboardScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  // 3️⃣ SKILLS LIST
-  Widget _buildSkillList(BuildContext context) {
+// -----------------------------------------------------------------------------
+// SKILLS TAB
+// -----------------------------------------------------------------------------
+
+class _SkillsTab extends StatelessWidget {
+  const _SkillsTab();
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      floatingActionButton: _buildGradientFAB(
-        context,
+      floatingActionButton: _GradientFAB(
         onPressed: () => Navigator.push(
-            context, MaterialPageRoute(builder: (_) => const AddSkillScreen())),
+          context,
+          MaterialPageRoute(builder: (_) => const AddSkillScreen()),
+        ),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -286,7 +317,8 @@ class DashboardScreen extends StatelessWidget {
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(
-                child: CircularProgressIndicator(color: Color(0xFF6366F1)));
+              child: CircularProgressIndicator(color: Color(0xFF6366F1)),
+            );
           }
 
           return ListView.builder(
@@ -295,9 +327,9 @@ class DashboardScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final doc = snapshot.data!.docs[index];
               final data = doc.data() as Map<String, dynamic>;
-              double level = (data['level'] ?? 0.0).toDouble();
+              final level = (data['level'] ?? 0.0).toDouble();
 
-              return _buildGlassCard(
+              return _GlassCard(
                 child: ListTile(
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -321,24 +353,14 @@ class DashboardScreen extends StatelessWidget {
                     style: const TextStyle(
                         color: Colors.white, fontWeight: FontWeight.bold),
                   ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildIconButton(
-                        icon: Icons.edit_rounded,
-                        color: Colors.blueAccent,
-                        onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => AddSkillScreen(skillDoc: doc))),
+                  trailing: _ActionButtons(
+                    onEdit: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AddSkillScreen(skillDoc: doc),
                       ),
-                      const SizedBox(width: 10),
-                      _buildIconButton(
-                        icon: Icons.delete_rounded,
-                        color: Colors.redAccent,
-                        onTap: () => _deleteItem(context, 'skills', doc.id),
-                      ),
-                    ],
+                    ),
+                    onDelete: () => _deleteItem(context, 'skills', doc.id),
                   ),
                 ),
               );
@@ -348,9 +370,18 @@ class DashboardScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  // 🎨 HELPER: Glassmorphism Card
-  Widget _buildGlassCard({required Widget child}) {
+// -----------------------------------------------------------------------------
+// REUSABLE WIDGETS
+// -----------------------------------------------------------------------------
+
+class _GlassCard extends StatelessWidget {
+  final Widget child;
+  const _GlassCard({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       decoration: BoxDecoration(
@@ -368,10 +399,14 @@ class DashboardScreen extends StatelessWidget {
       child: child,
     );
   }
+}
 
-  // 🎨 HELPER: Gradient FAB
-  Widget _buildGradientFAB(BuildContext context,
-      {required VoidCallback onPressed}) {
+class _GradientFAB extends StatelessWidget {
+  final VoidCallback onPressed;
+  const _GradientFAB({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -394,12 +429,47 @@ class DashboardScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  // 🎨 HELPER: Custom Icon Button
-  Widget _buildIconButton(
-      {required IconData icon,
-      required Color color,
-      required VoidCallback onTap}) {
+class _ActionButtons extends StatelessWidget {
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _ActionButtons({
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _IconBtn(
+            icon: Icons.edit_rounded, color: Colors.blueAccent, onTap: onEdit),
+        const SizedBox(width: 10),
+        _IconBtn(
+            icon: Icons.delete_rounded,
+            color: Colors.redAccent,
+            onTap: onDelete),
+      ],
+    );
+  }
+}
+
+class _IconBtn extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _IconBtn({
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(10),
@@ -413,41 +483,47 @@ class DashboardScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  // DELETE HELPER FUNCTION
-  void _deleteItem(BuildContext context, String collection, String docId) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
-        title:
-            const Text("Delete Item?", style: TextStyle(color: Colors.white)),
-        content: const Text("This action cannot be undone.",
-            style: TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text("Cancel",
-                  style: TextStyle(color: Colors.white54))),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              await FirebaseFirestore.instance
-                  .collection(collection)
-                  .doc(docId)
-                  .delete();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+// -----------------------------------------------------------------------------
+// DELETE HELPER
+// -----------------------------------------------------------------------------
+
+void _deleteItem(BuildContext context, String collection, String docId) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: const Color(0xFF1E293B),
+      title: const Text("Delete Item?", style: TextStyle(color: Colors.white)),
+      content: const Text(
+        "This action cannot be undone.",
+        style: TextStyle(color: Colors.white70),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text("Cancel", style: TextStyle(color: Colors.white54)),
+        ),
+        TextButton(
+          onPressed: () async {
+            Navigator.pop(ctx);
+            await FirebaseFirestore.instance
+                .collection(collection)
+                .doc(docId)
+                .delete();
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
                   content: Text("Item Deleted"),
                   backgroundColor: Colors.redAccent,
-                ));
-              }
-            },
-            child:
-                const Text("Delete", style: TextStyle(color: Colors.redAccent)),
-          ),
-        ],
-      ),
-    );
-  }
+                ),
+              );
+            }
+          },
+          child:
+              const Text("Delete", style: TextStyle(color: Colors.redAccent)),
+        ),
+      ],
+    ),
+  );
 }
